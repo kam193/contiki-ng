@@ -1032,13 +1032,7 @@ PROCESS_THREAD(data_structure_test_process, ev, data)
   printf("---\n");
 
   memset(elements, 0, sizeof(elements));
-
-  UNIT_TEST_RUN(test_list);
-  UNIT_TEST_RUN(test_stack);
-  UNIT_TEST_RUN(test_queue);
-  UNIT_TEST_RUN(test_csll);
-  UNIT_TEST_RUN(test_dll);
-  UNIT_TEST_RUN(test_cdll);
+  RUN_ALL();
 
   printf("=check-me= DONE\n");
 

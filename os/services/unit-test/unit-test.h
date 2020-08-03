@@ -39,6 +39,8 @@
 
 #include "sys/rtimer.h"
 
+#define MAX_UTS 20
+
 typedef enum unit_test_result {
   unit_test_failure = 0,
   unit_test_success = 1
@@ -57,6 +59,9 @@ typedef struct unit_test {
   rtimer_clock_t end;
 } unit_test_t;
 
+extern void (*test_list[MAX_UTS])();
+extern uint32_t test_size;
+
 /**
  * Register a unit test.
  *
@@ -68,6 +73,18 @@ typedef struct unit_test {
  * \param descr A string that briefly describes the unit test.
  */
 #define UNIT_TEST_REGISTER(name, descr) static unit_test_t unit_test_##name = {descr, __FILE__, unit_test_success, 0, 0, 0}
+
+#define _UNIT_TEST_RUNNER(name) \
+  static void unit_test_run_##name() { \
+    unit_test_function_##name(&unit_test_##name); \
+    UNIT_TEST_PRINT_REPORT(name); \
+  } \
+
+#define _UNIT_TEST_INITIALIZER(name) \
+  static void unit_test_init_##name(); \
+  __attribute__((constructor)) void unit_test_init_##name() { \
+    test_list[test_size++] = &unit_test_run_##name; \
+  }
 
 /**
  * Define a unit test.
@@ -88,7 +105,11 @@ typedef struct unit_test {
  *
  * \param name The name of the unit test.
  */
-#define UNIT_TEST(name) static void unit_test_function_##name(unit_test_t *utp)
+#define UNIT_TEST(name) \
+  static void unit_test_function_##name(unit_test_t *utp); \
+  _UNIT_TEST_RUNNER(name); \
+  _UNIT_TEST_INITIALIZER(name); \
+  static void unit_test_function_##name(unit_test_t *utp) 
 
 /**
  * Mark the starting point of the unit test function.
@@ -127,10 +148,13 @@ typedef struct unit_test {
  *
  * \param name The name of the unit test.
  */
-#define UNIT_TEST_RUN(name)  do {                                             \
-                               unit_test_function_##name(&unit_test_##name);  \
-                               UNIT_TEST_PRINT_REPORT(name);                  \
-                             } while(0)
+#define UNIT_TEST_RUN(name) unit_test_run_##name();
+
+#define RUN_ALL() do { \
+    for (; test_size > 0; test_size--){ \
+      test_list[test_size-1](); \
+    } \
+  } while(0); 
 
 /**
  * Report that a unit test succeeded.

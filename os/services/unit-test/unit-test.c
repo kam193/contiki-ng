@@ -38,6 +38,10 @@
 
 #include "unit-test.h"
 
+void (*test_list[MAX_UTS])();
+uint32_t test_size = 0;
+
+
 /*---------------------------------------------------------------------------*/
 /**
  * Print the results of a unit test.
